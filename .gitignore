@@ -2,3 +2,8 @@
 .htpasswd
 new/.htaccess
 /release/
+
+# Log files
+error_log.txt
+**/mail_errors.log
+admin/admin_audit.log

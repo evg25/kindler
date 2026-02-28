@@ -1,6 +1,9 @@
 <?php
 
-$ADMIN_EMAIL = "evgeny.neymer@gmail.com";
+// Load centralized logger
+require_once __DIR__ . '/../logger.php';
+
+$ADMIN_EMAIL = "poetry@kindler.cz";
 $FROM_EMAIL = "poetry@kindler.cz";
 $LOG_FILE = __DIR__ . "/mail_errors.log";
 $MAX_MESSAGE_LENGTH = 2000;
@@ -29,18 +32,22 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     // Validate required fields
     if ($name === "" || $email === "" || $message === "") {
         $error = "Все поля обязательны для заполнения.";
+        log_error('new/index.php', 'VALIDATION_ERROR', 'Required fields missing', ['name' => !empty($name), 'email' => !empty($email), 'message' => !empty($message)]);
     }
     // Validate email format
     elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = "Пожалуйста, введите корректный email адрес.";
+        log_error('new/index.php', 'VALIDATION_ERROR', 'Invalid email format', ['email' => $email]);
     }
     // Security: prevent header injection
     elseif (preg_match("/[\r\n]/", $email)) {
         $error = "Недопустимый формат email адреса.";
+        log_error('new/index.php', 'SECURITY_ERROR', 'Email header injection attempt detected', ['email' => $email]);
     }
     // Limit message length
     elseif (mb_strlen($message) > $MAX_MESSAGE_LENGTH) {
         $error = "Сообщение слишком длинное. Максимум " . $MAX_MESSAGE_LENGTH . " символов.";
+        log_error('new/index.php', 'VALIDATION_ERROR', 'Message too long', ['length' => mb_strlen($message), 'max' => $MAX_MESSAGE_LENGTH]);
     }
     else {
         $safe_email = filter_var($email, FILTER_SANITIZE_EMAIL);
@@ -96,6 +103,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $error_msg
             );
             @file_put_contents($LOG_FILE, $log_entry, FILE_APPEND | LOCK_EX);
+            
+            // Centralized error log
+            log_error('new/index.php', 'MAIL_SEND_FAILED', 'mail() returned false', [
+                'to' => $ADMIN_EMAIL,
+                'from' => $FROM_EMAIL,
+                'reply_to' => $safe_email,
+                'name' => $name,
+                'error' => $error_msg
+            ]);
             
             $error = "Ошибка при отправке сообщения. Пожалуйста, попробуйте позже.";
         }

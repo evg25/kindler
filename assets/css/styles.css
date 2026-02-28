@@ -1,0 +1,166 @@
+/* Minimalist Book Aesthetic */
+:root {
+    --text-color: #333333;
+    --bg-color: #faf9f6; /* slight off-white paper color */
+    --link-color: #7a5c43;
+    --link-hover-color: #4a3424;
+    --border-color: #e0ded8;
+}
+
+body {
+    font-family: "Georgia", "Times New Roman", serif;
+    color: var(--text-color);
+    background-color: var(--bg-color);
+    line-height: 1.8;
+    margin: 0;
+    padding: 0;
+    font-size: 18px;
+}
+
+main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+header {
+    max-width: 800px;
+    margin: 2rem auto 0;
+    padding: 0 1rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    text-align: center;
+}
+
+nav a {
+    color: var(--text-color);
+    text-decoration: none;
+    margin: 0 0.5rem;
+    font-variant: small-caps;
+    letter-spacing: 1px;
+}
+
+nav a:hover {
+    color: var(--link-color);
+}
+
+h1, h2, h3 {
+    font-weight: normal;
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+p {
+    margin-bottom: 1.5rem;
+}
+
+a {
+    color: var(--link-color);
+}
+
+a:hover {
+    color: var(--link-hover-color);
+}
+
+.poem-text {
+    white-space: pre-line;
+    margin: 2rem 0;
+    font-size: 1.1em;
+}
+
+.poem-nav {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 3rem;
+    border-top: 1px solid var(--border-color);
+    padding-top: 1rem;
+}
+
+/* Photos Grid */
+.photo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.photo-grid img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border: 1px solid var(--border-color);
+}
+
+.photo-grid a {
+    text-decoration: none;
+    color: var(--text-color);
+    text-align: center;
+    display: block;
+}
+
+/* Search */
+.search-container {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.search-input {
+    padding: 0.5rem;
+    font-size: 1rem;
+    width: 100%;
+    max-width: 400px;
+    font-family: inherit;
+    border: 1px solid var(--border-color);
+    background-color: #fff;
+    border-radius: 3px;
+}
+
+.poem-list {
+    list-style: none;
+    padding: 0;
+}
+
+.poem-list li {
+    margin-bottom: 1rem;
+    border-bottom: 1px dashed var(--border-color);
+    padding-bottom: 0.5rem;
+}
+
+.poem-list a {
+    text-decoration: none;
+    font-size: 1.1rem;
+}
+
+.poem-year {
+    float: right;
+    color: #888;
+    font-style: italic;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.no-results {
+    text-align: center;
+    color: #888;
+    font-style: italic;
+}
+
+.button {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--link-color);
+    text-decoration: none;
+    border-radius: 3px;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.button:hover {
+    background-color: var(--link-color);
+    color: #fff;
+}
+
+.access-page {
+    text-align: center;
+    margin-top: 10vh;
+}

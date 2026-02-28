@@ -1,12 +1,23 @@
 <?php
 
 $ADMIN_EMAIL = "evgeny.neymer@gmail.com";
-
+$FROM_EMAIL = "poetry@kindler.cz";
+$LOG_FILE = __DIR__ . "/mail_errors.log";
+$MAX_MESSAGE_LENGTH = 2000;
 
 $success = false;
 $error = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    // Log: Form submission started
+    $log_entry = sprintf(
+        "[%s] Form submission started | IP: %s\n",
+        date('c'),
+        $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+    );
+    @file_put_contents($LOG_FILE, $log_entry, FILE_APPEND | LOCK_EX);
+    
+    // Honeypot spam check
     if (!empty($_POST["company"])) {
         exit;
     }
@@ -15,11 +26,21 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $email = trim($_POST["email"] ?? "");
     $message = trim($_POST["message"] ?? "");
 
+    // Validate required fields
     if ($name === "" || $email === "" || $message === "") {
         $error = "Все поля обязательны для заполнения.";
     }
+    // Validate email format
     elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = "Пожалуйста, введите корректный email адрес.";
+    }
+    // Security: prevent header injection
+    elseif (preg_match("/[\r\n]/", $email)) {
+        $error = "Недопустимый формат email адреса.";
+    }
+    // Limit message length
+    elseif (mb_strlen($message) > $MAX_MESSAGE_LENGTH) {
+        $error = "Сообщение слишком длинное. Максимум " . $MAX_MESSAGE_LENGTH . " символов.";
     }
     else {
         $safe_email = filter_var($email, FILTER_SANITIZE_EMAIL);
@@ -29,14 +50,53 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $body .= "Email: " . $safe_email . "\n\n";
         $body .= "Сообщение:\n" . $message . "\n";
 
-        $headers = "From: " . $safe_email . "\r\n";
+        // Compliant headers for SPF/DKIM
+        $headers = "From: " . $FROM_EMAIL . "\r\n";
         $headers .= "Reply-To: " . $safe_email . "\r\n";
+        $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
         $headers .= "X-Mailer: PHP/" . phpversion();
 
-        if (@mail($ADMIN_EMAIL, $subject, $body, $headers)) {
+        // Log: Before sending email
+        $log_entry = sprintf(
+            "[%s] Attempting to send email | To: %s | From: %s | Reply-To: %s | Subject: %s\n",
+            date('c'),
+            $ADMIN_EMAIL,
+            $FROM_EMAIL,
+            $safe_email,
+            $subject
+        );
+        @file_put_contents($LOG_FILE, $log_entry, FILE_APPEND | LOCK_EX);
+
+        // Send email without error suppression
+        $mail_sent = mail($ADMIN_EMAIL, $subject, $body, $headers);
+
+        // Log: Immediately after mail() call
+        $log_entry = sprintf(
+            "[%s] mail() returned: %s\n",
+            date('c'),
+            $mail_sent ? 'TRUE (success)' : 'FALSE (failed)'
+        );
+        @file_put_contents($LOG_FILE, $log_entry, FILE_APPEND | LOCK_EX);
+
+        if ($mail_sent) {
             $success = true;
         }
         else {
+            // Capture error details
+            $last_error = error_get_last();
+            $error_msg = $last_error ? $last_error['message'] : 'No error details';
+            $remote_ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+            
+            // Log failure for debugging
+            $log_entry = sprintf(
+                "[%s] MAIL FAILED | IP: %s | Email: %s | Error: %s\n",
+                date('c'),
+                $remote_ip,
+                $safe_email,
+                $error_msg
+            );
+            @file_put_contents($LOG_FILE, $log_entry, FILE_APPEND | LOCK_EX);
+            
             $error = "Ошибка при отправке сообщения. Пожалуйста, попробуйте позже.";
         }
     }
@@ -116,7 +176,7 @@ else: ?>
     endif; ?>
 
             <div class="form-container">
-                <form method="POST" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">
+                <form method="POST" action="/new/">
                     <input type="text" name="company" style="display:none" tabindex="-1" autocomplete="off">
                     
                     <div class="form-group">

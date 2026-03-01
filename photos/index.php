@@ -9,6 +9,6 @@ require_once __DIR__ . '/../auth.php';
 if (auth_is_logged_in()) {
     header('Location: /app/photos/');
 } else {
-    header('Location: /login.php?next=' . urlencode('/app/photos/'));
+    header('Location: /home/?next=' . urlencode('/app/photos/'));
 }
 exit;

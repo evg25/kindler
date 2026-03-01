@@ -266,7 +266,7 @@ function auth_get_safe_redirect() {
 function auth_require_login($next_url = null) {
     if (!auth_is_logged_in()) {
         $next_param = $next_url ? '?next=' . urlencode($next_url) : '';
-        header('Location: /login.php' . $next_param);
+        header('Location: /home/' . $next_param);
         exit;
     }
 }

@@ -9,12 +9,22 @@ require_once __DIR__ . '/../auth.php';
 $is_logged_in = auth_is_logged_in();
 $username = $is_logged_in ? auth_get_username() : null;
 
+// Get next URL from query parameter
+$next_url = $_GET['next'] ?? '/home/';
+// Validate it's a safe internal URL
+if (!empty($next_url) && strpos($next_url, '/app/') === 0) {
+    $redirect_after_login = $next_url;
+} else {
+    $redirect_after_login = '/home/';
+}
+
 // Handle login POST
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
     $input_username = $_POST['username'] ?? '';
     $input_password = $_POST['password'] ?? '';
     $csrf_token = $_POST['csrf_token'] ?? '';
+    $next_from_form = $_POST['next'] ?? '/home/';
     
     // Verify CSRF token
     if (!auth_verify_csrf_token($csrf_token)) {
@@ -34,8 +44,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                 // Login user
                 auth_login($input_username);
                 
-                // Redirect to home
-                header('Location: /home/');
+                // Redirect to next URL or home
+                header('Location: ' . $next_from_form);
                 exit;
             } else {
                 // Record failed attempt
@@ -131,18 +141,18 @@ $csrf_token = auth_get_csrf_token();
 </head>
 
 <body>
+    <?php if ($is_logged_in): ?>
     <header>
         <nav>
             <a href="/home/">Главная</a> |
             <a href="/poems/">Стихи</a> |
             <a href="/photos/">Фото</a> |
             <a href="/book/">Книга</a> |
-            <a href="/bio/">Биография</a>
-            <?php if ($is_logged_in): ?>
-            | <a href="/logout.php">Выйти</a>
-            <?php endif; ?>
+            <a href="/bio/">Биография</a> |
+            <a href="/logout.php">Выйти</a>
         </nav>
     </header>
+    <?php endif; ?>
     <main>
         <h1>Наум Киндлер</h1>
 
@@ -205,6 +215,7 @@ $csrf_token = auth_get_csrf_token();
                 
                 <form method="POST">
                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+                    <input type="hidden" name="next" value="<?php echo htmlspecialchars($redirect_after_login); ?>">
                     
                     <div class="form-group">
                         <label for="username">Имя пользователя</label>

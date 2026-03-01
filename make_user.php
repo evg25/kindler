@@ -11,22 +11,25 @@
 
 require_once __DIR__ . '/auth.php';
 
-// Setup token - change this to a random string for first access
-// After setup, you can remove this check or this file
-$SETUP_TOKEN = 'setup_' . md5('poetry.kindler.cz'); // Change this!
+// Setup mode disabled for security
+// Admin login is now required for all access
+$is_setup_mode = false;
 
-// Check setup token OR require admin login
-$is_setup_mode = isset($_GET['token']) && $_GET['token'] === $SETUP_TOKEN;
+// If you need emergency access, uncomment and use a new random token:
+// $SETUP_TOKEN = 'emergency_' . bin2hex(random_bytes(16));
+// $is_setup_mode = isset($_GET['token']) && $_GET['token'] === $SETUP_TOKEN;
+// Then add ?token=YOUR_TOKEN to URL
 
-if (!$is_setup_mode) {
-    auth_require_login();
-    
-    // Verify user is admin
-    if (auth_get_username() !== 'admin') {
-        http_response_code(403);
-        exit('Only admin can manage users');
-    }
+// Require admin login
+auth_require_login();
+
+// Verify user is admin
+if (auth_get_username() !== 'admin') {
+    http_response_code(403);
+    exit('Only admin can manage users');
 }
+
+// } // Uncomment this if using emergency token above
 
 $message = '';
 $error = '';
